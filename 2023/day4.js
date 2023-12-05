@@ -2,16 +2,30 @@ const fs = require('fs');
 let input = fs.readFileSync('day4.txt', {encoding:'utf8', flag:'r'});
 input = input.trimEnd();
 const cl = console.log;
-//input = "5-6,6-41"
-const pairs = input.split('\n');
+const cards = input.split('\n');
+
+const { intersection } = require('set-operations');
 let total = 0;
-pairs.forEach(pair => {
-  let [elf1, elf2] = pair.split(',');
-  elf1 = elf1.split('-').map(digit=>parseInt(digit, 10));
-  elf2 = elf2.split('-').map(digit=>parseInt(digit, 10));
-  if (!(elf1[0] > elf2[1] || elf1[1] < elf2[0])) {
-    cl(elf1, elf2);
-    total++;
+let cardCount = Array(cards.length).fill(1);
+
+cards.forEach((card, cardIndex) => {
+  // get rid of double spaces for single digit numbers, and then separate winners and numbers
+  let [winners, numbers] = card.replaceAll(/\s\s/g, ' ').split(': ')[1].split(' | ');
+  winners = winners.split(' ');
+  numbers = numbers.split(' ');
+
+  let matches = intersection(winners, numbers);
+  let numMatches = matches.length;
+  if (numMatches > 0) {
+    cl(`adding ${Math.pow(2, numMatches - 1)}`);
+    total += Math.pow(2, numMatches - 1);
+
+    while (numMatches > 0) {
+      cardCount[cardIndex + numMatches] += cardCount[cardIndex];
+      numMatches--;
+    }
   }
 });
-cl(total);
+cl(`Part 1 - Points Total: ${total}`);
+const totalCards = cardCount.reduce((cardTotal, curVal) => cardTotal + curVal, 0)
+cl(`Part 2 - Total Cards: ${totalCards}`);
