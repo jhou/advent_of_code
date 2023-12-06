@@ -8,11 +8,11 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "runtimeVersion": "18",
+      "runtimeVersion": "20",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/day3_part2.js"
+      "program": "${workspaceFolder}/day5.js"
     }
   ]
 }
