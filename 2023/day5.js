@@ -4,59 +4,86 @@ input = input.trimEnd();
 const jcl = (sss) => console.log(JSON.stringify(sss));
 const cl = console.log;
 
-let [stacksTxt, moves] = input.split('\n\n');
+let sections = input.split('\n\n');
+// jcl(sections);
+const seeds = sections[0].split(': ')[1].split(' ').map(x => parseInt(x, 10));
 
-cl(stacksTxt);
+const isInRanges = n => {
+  for (let i = 0; i < seeds.length; i += 2) {
+    let start = seeds[i],
+        count = seeds[i + 1];
 
-const stacksRaw = stacksTxt.split('\n');
-const stacks = [];
-moves = moves.split('\n');
-
-const setupStacks = () => {
-  let lastRow = stacksRaw.pop();
-  const numStacks = parseInt(lastRow[lastRow.length-1]);
-
-  for (let i = 0; i < numStacks; i++) {
-    stacks.push([]);
-  }
-  while (stacksRaw.length > 0) {
-    lastRow = stacksRaw.pop();
-
-    let offset = 1;
-    for (let i = 0; i < numStacks; i++) {
-      if ([' ', undefined].indexOf(lastRow[offset]) === -1) {
-        stacks[i].push(lastRow[offset]);
-      }
-      offset += 4;
+    if (n < start + count && n >= start) {
+      return true;
     }
   }
+  return false;
 };
 
-const processMoves = () => {
-  moves.forEach(move => {
-    let pawn, pawns = [];
-    const parsedMove = move.split(' ');
-    const moveNum = parseInt(parsedMove[1]);
-    const moveFrom = parseInt(parsedMove[3]);
-    const moveTo = parseInt(parsedMove[5]);
+const maps = [];
+// skip the seeds, then creat maps
+for (let i = 1; i < sections.length; i++) {
+  let newMap = [],
+      mapLines = sections[i].split('\n'),
+      splitRange,
+      newRange,
+      source, dest, rangeLen, additive;
 
-    for (let i = 0; i < moveNum; i++) {
-      pawns.push(stacks[moveFrom - 1].pop());
-    }
-    for (let i = 0; i < moveNum; i++) {
-      stacks[moveTo - 1].push(pawns.pop());
+  // skip the name of the map
+  for (let j = 1; j < mapLines.length; j++) {
+    splitRange = mapLines[j].split(' ');
+    source = parseInt(splitRange[1]);
+    dest = parseInt(splitRange[0]);
+    rangeLen = parseInt(splitRange[2]);
+    additive = dest - source;
+    newRange = {
+      source,
+      dest,
+      rangeLen,
+      additive
+    };
+    newMap.push(newRange);
+    // jcl(newRange);
+  }
+  maps.push(newMap);
+};
+// maps.map(jcl)
+
+const runTransformations = seed => {
+  let range;
+  maps.forEach(map => {
+    for (let i = 0; i < map.length; i++) {
+      range = map[i];
+      if (seed >= range.source && seed < (range.source + range.rangeLen)) {
+        // cl(`adding ${range.additive} to ${seed}`);
+        seed = seed + range.additive;
+        break;
+      }
     }
   });
+  return seed;
+}
+const reverseTransform = loc => {
+  let range;
+  maps.toReversed().forEach(map => {
+    for (let i = map.length - 1; i >= 0; i--) {
+      range = map[i];
+      if (loc >= range.dest && loc < (range.dest + range.rangeLen)) {
+        loc = loc - range.additive;
+        break;
+      }
+    }
+  });
+  return loc;
 };
 
-setupStacks();
-jcl(stacks);
-processMoves();
-jcl(stacks);
 
-let codes = [];
-stacks.forEach(stack => {
-  codes.push(stack[stack.length - 1]);
-});
-cl(codes.join(''));
+let locations = seeds.map(runTransformations);
 
+let minLoc = 0;
+while (!isInRanges(reverseTransform(minLoc))) {
+  minLoc++;
+}
+
+cl(`Part 1 - Minimum Location: ${locations.reduce((a, b) => Math.min(a,b), 1000000000)}`);
+cl(`Part 2 - Minimum Location: ${minLoc}`);
