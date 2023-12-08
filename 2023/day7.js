@@ -4,100 +4,105 @@ input = input.trimEnd();
 const jcl = (sss) => console.log(JSON.stringify(sss));
 const cl = console.log;
 
-// input  = `$ cd /
-// $ ls
-// dir a
-// 14848514 b.txt
-// 8504156 c.dat
-// dir d
-// $ cd a
-// $ ls
-// dir e
-// 29116 f
-// 2557 g
-// 62596 h.lst
-// $ cd e
-// $ ls
-// 584 i
-// $ cd ..
-// $ cd ..
-// $ cd d
-// $ ls
-// 4060174 j
-// 8033020 d.log
-// 5626152 d.ext
-// 7214296 k
-// `;
-input = input.split('\n');
-const makeNewDir = (name, parent) => {
-  return {
-    name,
-    size: undefined,
-    parent,
-    children: {}
-  };
+const values = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+const valuesJs = ['J', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A'];
+
+const compareHands = (a, b, part = 1) => {
+  let aCards = a[0],
+      bCards = b[0],
+      aType = findType(aCards, part),
+      bType = findType(bCards, part);
+
+  if (aType !== bType) {
+    return aType - bType;
+  }
+  // they're same type
+  return compareValues(aCards, bCards, part);
 };
 
-const makeNewFile = (name, parent, size) => {
-  return {
-    name,
-    size,
-    parent
-  };
-};
-
-let cmd;
-const fileRegex = /\d+ .*/;
-const cdRegex = /\$ cd [a-zA-Z\.]+/;
-
-const calcSize = (dir) => {
-  return Object.entries(dir.children).reduce(
-    (curSize, entry) => entry[1].size + curSize,
-    0
-  );
-};
-
-let minSol = 41111105;
-const root = makeNewDir('/');
-let curDir = root;
-input.shift(); // cd /
-while ((cmd = input.shift()) !== undefined) {
-  cmd = cmd.trim();
-//  cl(cmd);
-  if (cmd === '$ ls') continue;
-  if (cmd === '$ cd ..') {
-    curDir.size = calcSize(curDir);
-    if (curDir.size >= 1111105) {
-      minSol = Math.min(minSol, curDir.size);
+const processJs = (buckets) => {
+  let jPosition = Object.keys(buckets).indexOf('J');
+  if (jPosition > -1) {
+    let numJs = buckets['J'];
+    delete buckets['J'];
+    let maxCard, maxCardValue = 0;
+    for (const card in buckets) {
+      if (maxCardValue === undefined || maxCardValue < buckets[card]) {
+        maxCard = card;
+        maxCardValue = buckets[card];
+      }
     }
-    curDir = curDir.parent;
-    continue;
-  };
-  if (cmd.startsWith('dir')) {
-    let newDirName = cmd.split(' ')[1];
-    curDir.children[newDirName] = makeNewDir(newDirName, curDir);
-    continue;
-  }
-  if (fileRegex.test(cmd)) {
-    let [newSize, newFileName] = cmd.split(' ');
-    curDir.children[newFileName] = makeNewFile(newFileName, curDir, parseInt(newSize));
-    continue;
-  }
-  if (cdRegex.test(cmd)) {
-    let splitCmd = cmd.split(' ');
-    curDir = curDir.children[splitCmd[splitCmd.length - 1]];
-    continue;
+    buckets[maxCard] += numJs;
   }
 };
 
-while (curDir !== undefined) {
-  curDir.size = calcSize(curDir);
-  if (curDir.size >= 1111105) {
-    minSol = Math.min(minSol, curDir.size);
+const findType = (cards, part) => {
+  let buckets = {};
+  for (let i = 0; i < cards.length; i++) {
+    if (buckets[cards[i]] === undefined) {
+      buckets[cards[i]] = 1;
+    } else {
+      buckets[cards[i]]++;
+    }
   }
-  cl(`${curDir.name}: ${curDir.size}`);
-  curDir = curDir.parent;
+  if (part === 2) {
+    processJs(buckets);
+  }
+  const numBuckets = Object.keys(buckets).length;
+  if (numBuckets === 1) {
+    return 7; // 5 of a kind
+  }
+  if (numBuckets === 2) {
+    if (Object.values(buckets).indexOf(4) > -1) {
+      return 6; // 3 of a kind
+    }
+    return 5; // must have been full house
+  }
+  if (numBuckets === 3) {
+    if (Object.values(buckets).indexOf(3) > -1) {
+      return 4; // 3 of a kind
+    }
+    return 3; // must have been 2 pairs
+  }
+  if (numBuckets === 4) {
+    return 2; // one pair, the rest are different
+  }
+  if (numBuckets === 5) {
+    return 1; // all different cards
+  }
+  throw new Error('Invalid cards');
 };
 
-cl(`total size: ${root.size}`);
-cl(`Minimum solution: ${minSol}`);
+const compareValues = (aCards, bCards, part) => {
+  let valueArray = part === 1 ? values : valuesJs;
+  for (let i = 0; i < 5; i++) {
+    if (aCards.charAt(i) !== bCards.charAt(i)) {
+      return valueArray.indexOf(aCards.charAt(i)) - valueArray.indexOf(bCards.charAt(i));
+    }
+  }
+  // must be the same values
+  return 0;
+};
+
+let hands = input.split('\n');
+let handsJs = input.split('\n');
+// hand[0] is the cards, and hands[1] is the bid
+hands = hands.map((hand) => hand.split(' '));
+handsJs = handsJs.map((hand) => hand.split(' '));
+
+// do the magic
+hands.sort(compareHands);
+// do the magic _again_
+handsJs.sort((a, b) => compareHands(a, b, 2));
+
+const countWinnings = (acc, hand, idx) => {
+  const bid = hand[1];
+  return acc + ((idx + 1) * bid);
+};
+// count the winnings
+let totalWinnings = hands.reduce(countWinnings, 0);
+let totalWinningsJs = handsJs.reduce(countWinnings, 0);
+
+
+cl(`Part 1 - Total Winnings: ${totalWinnings}`);
+cl(`Part 2 - Total Winnings: ${totalWinningsJs}`);
