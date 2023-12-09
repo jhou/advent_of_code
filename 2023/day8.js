@@ -4,126 +4,78 @@ input = input.trimEnd();
 const jcl = (sss) => console.log(JSON.stringify(sss));
 const cl = console.log;
 
-// input = `30373
-// 25512
-// 65332
-// 33549
-// 35390`;
+// input = `LR
 
-const rows = input.split('\n');
-const numRows = rows.length;
-const numCols = rows[0].length;
-const visible = [];
-const scores = [];
-rows.forEach((row) => {
-  let newArray = Array(row.length).fill(0);
-  visible.push(newArray);
-  newArray = Array(row.length).fill(1);
-  scores.push(newArray);
-});
-let i, j,
-    curHeight, curMax = -1,
-    curScore = 0, prevHeights = [];
+// 11A = (11B, XXX)
+// 11B = (XXX, 11Z)
+// 11Z = (11B, XXX)
+// 22A = (22B, XXX)
+// 22B = (22C, 22C)
+// 22C = (22Z, 22Z)
+// 22Z = (22B, 22B)
+// XXX = (XXX, XXX)`;
 
-const calcScore = () => {
-  let newScore = 0;
-  for (let k = 0; k < prevHeights.length; k++) {
-    newScore++;
-    if (prevHeights[k] >= curHeight) {
-      break;
-    }
+let [instructions, nodeLines] = input.split('\n\n');
+const lineRegex = /(\w{3}) = \((\w{3}), (\w{3})\)/
+
+const parseNode = line => {
+  const match = lineRegex.exec(line);
+  const nodeName = match[1],
+  nodeLeft = match[2],
+  nodeRight = match[3];
+  nodes[nodeName] = {
+    L: nodeLeft,
+    R: nodeRight
+  };
+  if (nodeName.charAt(2) === 'A') {
+    aNodes.push(nodeName);
   }
-  prevHeights.unshift(curHeight);
-  return newScore;
+  if (nodeName.charAt(2) === 'Z') {
+    zNodes.push(nodeName);
+  }
+  if (nodeLeft === nodeRight) {
+    cl(`redundant node ${nodeName}, ${nodeLeft}, ${nodeRight}`)
+  }
 };
 
-jcl(rows);
-
-// going up the rows
-for (i = 0; i < numRows; i++) {
-  for (j = 0; j < numCols; j++) {
-    curHeight = parseInt(rows[i][j]);
-    // visibility
-    if (curHeight > curMax) {
-      visible[i][j] = 1;
-      curMax = curHeight;
+let allNodesHaveZ = (curNodes) => {
+  for (let i = 0; i < curNodes.length; i++) {
+    if (curNodes[i].charAt(2) !== 'Z') {
+      return false;
     }
-    // score
-    scores[i][j] = scores[i][j] * calcScore();
   }
-  curMax = -1;
-  curScore = 0;
-  prevHeights = [];
-}
-// cl('visible')
-// jcl(visible);
-// cl('scores')
-// jcl(scores);
+  return true;
+};
 
-// going down the rows
-for (i = 0; i < numRows; i++) {
-  for (j = numCols-1; j >= 0 ; j--) {
-    curHeight = parseInt(rows[i][j]);
-    if (curHeight > curMax) {
-      visible[i][j] = 1;
-      curMax = curHeight;
-    }
-    // score
-    scores[i][j] = scores[i][j] * calcScore();
+let nodes = {},
+    aNodes = [],
+    zNodes = [];
+
+nodeLines.split('\n').forEach(parseNode);
+
+let curNode = 'AAA';
+let counter = 0;
+// while (curNode !== 'ZZZ') {
+//   const instr = instructions.charAt(counter % (instructions.length));
+//   curNode = nodes[curNode][instr];
+//   counter++;
+// }
+cl(`Part 1 - Number of steps: ${counter}`);
+
+
+const countNodes = (curNodes) => {
+  let counter = BigInt(0);
+  while (!allNodesHaveZ(curNodes)) {
+    const instr = instructions.charAt(Number(counter % BigInt(instructions.length)));
+    curNodes = curNodes.map(n => nodes[n][instr]);
+    counter++;
+    // if (counter > 10000000) {
+    //   throw new Error('Too many steps')
+    // }
   }
-  curMax = -1;
-  curScore = 0;
-  prevHeights = [];
-}
-// cl('visible')
-// jcl(visible);
-// cl('scores')
-// jcl(scores);
+  cl(counter)
+  return counter;
+};
+let nodeCountProduct = aNodes.reduce((total, node) => (total * countNodes([node])), BigInt(1));
 
-
-// going down the columns
-for (i = 0; i < numCols; i++) {
-  for (j = 0; j < numRows; j++) {
-    curHeight = parseInt(rows[j][i]);
-    if (curHeight > curMax) {
-      visible[j][i] = 1;
-      curMax = curHeight;
-    }
-    // score
-    scores[j][i] = scores[j][i] * calcScore();
-  }
-  curMax = -1;
-  curScore = 0;
-  prevHeights = [];
-}
-// cl('visible')
-// jcl(visible);
-// cl('scores')
-// jcl(scores);
-
-
-// going up the columns
-for (i = 0; i < numCols; i++) {
-  for (j = numRows - 1; j >= 0; j--) {
-    curHeight = parseInt(rows[j][i]);
-    if (curHeight > curMax) {
-      visible[j][i] = 1;
-      curMax = curHeight;
-    }
-    // score
-    scores[j][i] = scores[j][i] * calcScore();
-  }
-  curMax = -1;
-  curScore = 0;
-  prevHeights = [];
-}
-cl('visible')
-jcl(visible);
-cl('scores')
-jcl(scores);
-
-
-const totalVisible = visible.flat().reduce((sum, cur) => sum + cur, 0);
-const maxScore = scores.flat().reduce((maximum, cur) => Math.max(maximum, cur), 0);
-cl(`totalVisible: ${totalVisible}`);
-cl(`maxScore: ${maxScore}`);
+cl(`Part 2 - Number of steps: ${counter}`);
