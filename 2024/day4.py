@@ -51,6 +51,7 @@ total_x_mas = 0
 for row_idx, row in enumerate(grid):
   for col_idx, col in enumerate(row):
     if col == 'X':
+      # found an 'X', now look in the neighboring positions for 'M','A','S'
       total_xmas += find_xmas(row_idx, col_idx)
     elif 0 < row_idx < (len(grid) - 1) and 0 < col_idx < (len(row) - 1) and col == 'A':
       # only consider the inner rectangle (excluding 1 row from top,bottom,left,right)
