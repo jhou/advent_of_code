@@ -9,15 +9,20 @@ def find_xmas(row_idx, col_idx):
   start_col = max(0, col_idx - 1)
   end_col = min(len(grid[0]) - 1, col_idx + 1)
   total = 0
+  # search the square around 'X' for an 'M'
   for r in range(start_row, end_row + 1):
     for c in range(start_col, end_col + 1):
       if grid[r][c] == 'M':
+        # which direction on the row/column do we move?
+        # actually more of a delta than a direction.
         row_dir = r - row_idx
         col_dir = c - col_idx
+        # don't go outside the grid.
         if r + 2*row_dir < 0 or r + 2*row_dir >= len(grid):
           continue
         if c + 2*col_dir < 0 or c + 2*col_dir >= len(grid[0]):
           continue
+        # we know we found 'XM' so far, so look for 'A' and 'S'
         if grid[r + row_dir][c + col_dir] == 'A' and grid[r + 2*row_dir][c + 2*col_dir] == 'S':
           total += 1
   return total
