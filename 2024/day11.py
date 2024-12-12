@@ -54,5 +54,5 @@ def run_blinks(num_blinks):
   return sum([calc_stone_length(stone_map, num, num_blinks - 1) for num in input_numbers])
 
 print(f"Part 1 - Total for 25 blinks: {run_blinks(25)}")
-print(f"Part 1 - Total for 75 blinks: {run_blinks(75)}")
+print(f"Part 2 - Total for 75 blinks: {run_blinks(75)}")
 

@@ -14,6 +14,7 @@ directions = {
 def check_in_grid(pos):
   return 0 <= pos[0] < len(grid) and 0 <= pos[1] < len(grid[pos[0]])
 
+
 def calc_next_position(pos):
     """
     Calculate the next position based on the current position and direction.
@@ -56,6 +57,8 @@ def get_positions(grid):
   all_set = set()
   while check_in_grid(cur_pos):
     all_positions += [cur_pos]
+
+
     all_set.add(cur_pos)
     next_pos = calc_next_position(cur_pos)
     if check_in_grid(next_pos) and grid[next_pos[0]][next_pos[1]] in '#O':
@@ -79,7 +82,7 @@ for dpos in without_start_pos:
   try:
     get_positions(test_grid)
   except Exception as e:
-    print(f"found repeated vector at position: {dpos}")
+#    print(f"found repeated vector at position: {dpos}")
     loops += 1
 
 print("Part 1 - Total positions:", len(deduped_positions))
