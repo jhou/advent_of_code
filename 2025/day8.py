@@ -1,10 +1,10 @@
 from utils import *
 from itertools import combinations as combos
+import copy
+import math
 
 f=open('day8.txt', 'r')
-  
 points = [tuple(map(int, line.split(','))) for line in f.readlines()]
-import math
 
 def straight_line_distance(point1, point2):
     x1, y1, z1 = point1
@@ -41,7 +41,6 @@ for idx, (cur_points, dist) in enumerate(distances):
             print('part 2: found complete circuit p1x * p2x', p1[0]*p2[0])
             break
     if idx == 999:
-        import copy
         part1_circuits = copy.deepcopy(circuits)
         # break
 
